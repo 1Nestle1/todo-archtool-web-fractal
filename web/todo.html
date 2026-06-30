@@ -34,6 +34,21 @@
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background: radial-gradient(56rem 40rem at 78% -12%, rgba(198,242,78,.06), transparent 60%);
   }
+
+  /* ── custom scrollbars ── */
+  * { scrollbar-width: thin; scrollbar-color: #2c313a transparent; }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: #2c313a; border-radius: 999px;
+    border: 3px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: #3b424d; background-clip: padding-box; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+  /* the task area gets an accent-tinted thumb so it reads as the focus */
+  .area { scrollbar-color: #38414c transparent; scroll-behavior: smooth; overscroll-behavior: contain; }
+  .area::-webkit-scrollbar-thumb { background: #38414c; border: 3px solid transparent; background-clip: padding-box; }
+  .area::-webkit-scrollbar-thumb:hover { background: rgba(198,242,78,.45); background-clip: padding-box; }
   a { color: inherit; text-decoration: none; }
   button { font-family: var(--sans); }
   .mono { font-family: var(--mono); }
@@ -145,6 +160,9 @@
   .field input:focus { border-color: var(--accent); }
   .err-msg { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
   .modal .home { display: block; text-align: center; margin-top: 16px; color: var(--muted-2); font-size: 12.5px; }
+  .modal-sm { max-width: 392px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .modal-actions .btn { padding: 10px 16px; }
 
   @media (max-width: 760px) {
     .shell { grid-template-columns: 1fr; height: auto; min-height: 100dvh; }
@@ -234,6 +252,23 @@
       <button class="btn btn-primary" id="btn-start" style="width:100%; margin-top:6px;">Create user and continue</button>
       <div class="err-msg" id="ob-err"></div>
       <a class="home" href="/">back to home</a>
+    </div>
+  </div>
+
+  <!-- new list -->
+  <div class="overlay" id="list-overlay" style="display:none;">
+    <div class="modal modal-sm">
+      <h2>New list</h2>
+      <p>Group your tasks under a named list.</p>
+      <div class="field">
+        <label for="nl-input">List name</label>
+        <input type="text" id="nl-input" placeholder="Reading, Errands, Q3 goals" autocomplete="off" />
+      </div>
+      <div class="err-msg" id="nl-err"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="nl-cancel">Cancel</button>
+        <button class="btn btn-primary" id="nl-create">Create list</button>
+      </div>
     </div>
   </div>
 
@@ -329,13 +364,30 @@
     if (ok) { state.todos = Array.isArray(data) ? data : []; render(); }
   }
 
-  // ── new list ──
-  $("new-list").addEventListener("click", () => {
-    const name = (prompt("Name the new list") || "").trim();
-    if (!name) return;
+  // ── new list (custom modal, no native prompt) ──
+  function openNewList() {
+    $("nl-input").value = "";
+    $("nl-err").textContent = "";
+    $("list-overlay").style.display = "flex";
+    setTimeout(() => $("nl-input").focus(), 30);
+  }
+  function closeNewList() { $("list-overlay").style.display = "none"; }
+  function createList() {
+    const name = $("nl-input").value.trim();
+    if (!name) { $("nl-err").textContent = "Give the list a name."; return; }
     if (!state.groups.includes(name)) state.groups.push(name);
-    state.list = name; render();
+    state.list = name;
+    closeNewList();
+    render();
+  }
+  $("new-list").addEventListener("click", openNewList);
+  $("nl-create").addEventListener("click", createList);
+  $("nl-cancel").addEventListener("click", closeNewList);
+  $("nl-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") createList();
+    if (e.key === "Escape") closeNewList();
   });
+  $("list-overlay").addEventListener("click", (e) => { if (e.target === $("list-overlay")) closeNewList(); });
 
   // ── filters ──
   $("seg").addEventListener("click", (e) => {
