@@ -1,0 +1,16 @@
+# Стек
+archtool==2.1.1
+web_fractal==0.0.1
+
+# web_fractal 0.0.1 не объявляет свои рантайм-зависимости в метаданных пакета —
+# фиксируем их здесь явно, чтобы проект ставился одной командой.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy[asyncio]>=2.0
+pydantic>=2.7
+email-validator>=2.0
+aiosqlite>=0.20
+greenlet>=3.0
+furl>=2.1
+pytz>=2024.1
+aiohttp>=3.9
